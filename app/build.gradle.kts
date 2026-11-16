@@ -11,6 +11,10 @@ android {
     namespace = "bg.rado.molitvenik"
     compileSdk = 35
 
+    base {
+        archivesName.set("molitvenik")
+    }
+
     val envVersionName = System.getenv("VERSION_NAME") ?: project.findProperty("versionName") as? String
     val envVersionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: (project.findProperty("versionCode") as? String)?.toIntOrNull()
 
