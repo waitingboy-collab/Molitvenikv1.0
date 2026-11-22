@@ -16,12 +16,33 @@ android {
         applicationId = "bg.rado.molitvenik"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
+    }
+
+    // Ключът за подписване се подава отвън (GitHub секрети или keystore.properties) — никога не е в репото.
+    val keystoreProps = java.util.Properties().apply {
+        val f = rootProject.file("keystore.properties")
+        if (f.exists()) f.inputStream().use { load(it) }
+    }
+    fun secret(env: String, prop: String): String? = System.getenv(env) ?: keystoreProps.getProperty(prop)
+    val storePath = secret("KEYSTORE_PATH", "storeFile")
+
+    signingConfigs {
+        if (storePath != null && file(storePath).length() > 0 && secret("KEYSTORE_PASSWORD", "storePassword") != null) {
+            create("release") {
+                storeFile = file(storePath)
+                storePassword = secret("KEYSTORE_PASSWORD", "storePassword")
+                keyAlias = secret("KEY_ALIAS", "keyAlias")
+                keyPassword = secret("KEY_PASSWORD", "keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
+            // Без ключ (напр. липсващи секрети) се подписва с debug ключа, за да може APK-то пак да се инсталира.
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
         }

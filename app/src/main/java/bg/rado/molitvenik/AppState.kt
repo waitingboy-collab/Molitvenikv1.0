@@ -14,7 +14,7 @@ import bg.rado.molitvenik.data.PrayerRepository
 import bg.rado.molitvenik.data.Prefs
 
 /** Общото състояние на приложението (живее докато приложението е отворено). */
-class AppState(val repo: PrayerRepository, private val prefs: Prefs) {
+class AppState(val repo: PrayerRepository, private val prefs: Prefs, val speaker: Speaker) {
 
     val items: List<Prayer> get() = repo.items
     val categories: List<String> get() = repo.categories

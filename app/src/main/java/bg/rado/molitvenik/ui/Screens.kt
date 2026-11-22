@@ -26,9 +26,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
@@ -45,6 +47,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -77,7 +80,7 @@ import java.time.LocalDate
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SearchScreen(state: AppState, onOpen: (String) -> Unit) {
+fun SearchScreen(state: AppState, onOpen: (String) -> Unit, onCalendar: () -> Unit) {
     val focus = LocalFocusManager.current
     val results = remember(state.query, state.category) {
         Search.search(state.items, state.query, state.category)
@@ -134,6 +137,9 @@ fun SearchScreen(state: AppState, onOpen: (String) -> Unit) {
                     )
                 }
             }
+        }
+        if (showHome) {
+            item { TodayCard(LocalDate.now(), onClick = onCalendar) }
         }
         if (showHome && verse != null) {
             item { VerseOfDayCard(verse) { onOpen(verse.id) } }
@@ -246,6 +252,10 @@ fun PrayerScreen(state: AppState, id: String, onBack: () -> Unit) {
     }
     val ctx = LocalContext.current
     val clipboard = LocalClipboardManager.current
+    val speaking = state.speaker.speakingId == p.id
+
+    // Спира четенето, когато излезеш от молитвата.
+    DisposableEffect(p.id) { onDispose { state.speaker.stop() } }
 
     Column(Modifier.fillMaxSize()) {
         Row(
@@ -263,6 +273,13 @@ fun PrayerScreen(state: AppState, id: String, onBack: () -> Unit) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            IconButton(onClick = { state.speaker.toggle(p.id, p.title + ". " + p.text) }) {
+                Icon(
+                    if (speaking) Icons.Filled.Close else Icons.Filled.PlayArrow,
+                    contentDescription = if (speaking) "Спри четенето" else "Прочети на глас",
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
             TextButton(onClick = { state.changeFont(-2f) }) { Text("A−") }
             TextButton(onClick = { state.changeFont(2f) }) { Text("A+", fontWeight = FontWeight.Bold) }
             IconButton(onClick = { state.toggleFavorite(p.id) }) {
